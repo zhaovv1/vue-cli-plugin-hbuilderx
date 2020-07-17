@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
-
+const _7z = require('7zip-min');
+var exec = require('child_process').exec; 
 const {
   log,
   done
@@ -79,12 +80,28 @@ class WebpackAppPlusPlugin {
               if (!isFirst && changedFiles.length > 0) {
                 if (serviceChangedFiles.length === 0 && viewChangedFiles.length === 0) {
                   // 仅 nvue 页面发生变化
-                  done('Build complete. PAGES:' + JSON.stringify(changedFiles))
+                  done('Build complete. PAGES:>>>' + JSON.stringify(changedFiles))
                 } else {
-                  done('Build complete. FILES:' + JSON.stringify(changedFiles))
+                  done('Build complete. FILES:>>>' + JSON.stringify(changedFiles))
                 }
+                var srcpath = process.env.UNI_CLI_CONTEXT + "/dist/dev/app-plus/*"
+                var destpath = process.env.UNI_CLI_CONTEXT + '/dist/dev/app-plus/__UNI__3F88888.wgt'
+  
+                //压缩wgt包
+                _7z.pack(srcpath.replace(/\\/g,"/"), destpath.replace(/\\/g,"/"), err => {
+                  // done
+                  console.log('>>>编译完成>>>wgt包打包完成--' + err);
+                });
               } else {
                 !process.env.UNI_AUTOMATOR_WS_ENDPOINT && done('Build complete. Watching for changes...')
+                var srcpath = process.env.UNI_CLI_CONTEXT + "/dist/dev/app-plus/*"
+                var destpath = process.env.UNI_CLI_CONTEXT + '/dist/dev/app-plus/__UNI__3F88888.wgt'
+  
+                //压缩wgt包
+                _7z.pack(srcpath.replace(/\\/g,"/"), destpath.replace(/\\/g,"/"), err => {
+                  // done
+                  console.log('>>>编译完成>>>wgt包打包完成--' + err);
+                });
               }
               isFirst = false
             } else {
@@ -111,7 +128,7 @@ class WebpackAppPlusPlugin {
             path.resolve(process.env.UNI_OUTPUT_DIR, 'manifest.json'))
             log()
             if (process.env.NODE_ENV === 'development') {
-              done('Build complete. Watching for changes...')
+              done('Build complete. Watching for changes...>>>>>>///')
             } else {
               done('Build complete. ')
             }
