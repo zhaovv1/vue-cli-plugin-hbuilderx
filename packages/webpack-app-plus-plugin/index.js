@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const _7z = require('7zip-min');
+var archiver = require('archiver');
 var exec = require('child_process').exec; 
 const {
   log,
@@ -66,6 +66,31 @@ class WebpackAppPlusPlugin {
       })
 
       compiler.hooks.done.tapPromise('WebpackAppPlusPlugin', compilation => {
+          function zipwgt() {
+            var srcpath = path.join(process.env.UNI_CLI_CONTEXT + '/dist/dev/app-plus/');
+            var destpath = path.join(process.env.UNI_CLI_CONTEXT + '/dist/dev/__UNI__3F88888.wgt');
+            var output = fs.createWriteStream(destpath);
+            var archive = archiver('zip', {
+              store: false // Sets the compression method to STORE. 
+            });
+
+            // listen for all archive data to be written 
+            output.on('close', function() {
+              console.log(archive.pointer() + ' total bytes');
+              console.log('archiver has been finalized and the output file descriptor has closed.');
+            });
+            // good practice to catch this error explicitly 
+            archive.on('error', function(err) {
+              console.log('----error-----' + err);
+              throw err;
+            });
+            // pipe archive data to the file 
+            archive.pipe(output);
+            // append files from a directory 
+            archive.directory(srcpath,"./"); 
+            // finalize the archive (ie we are done appending files but streams have to finish yet) 
+            archive.finalize();
+        }
         return new Promise((resolve, reject) => {
           isAppNVue && (nvueCompiled = true)
           isAppService && (serviceCompiled = true)
@@ -84,24 +109,12 @@ class WebpackAppPlusPlugin {
                 } else {
                   done('Build complete. FILES:>>>' + JSON.stringify(changedFiles))
                 }
-                var srcpath = process.env.UNI_CLI_CONTEXT + "/dist/dev/app-plus/*"
-                var destpath = process.env.UNI_CLI_CONTEXT + '/dist/dev/app-plus/__UNI__3F88888.wgt'
-  
                 //压缩wgt包
-                _7z.pack(srcpath.replace(/\\/g,"/"), destpath.replace(/\\/g,"/"), err => {
-                  // done
-                  console.log('>>>编译完成>>>wgt包打包完成--' + err);
-                });
+                zipwgt();
               } else {
                 !process.env.UNI_AUTOMATOR_WS_ENDPOINT && done('Build complete. Watching for changes...')
-                var srcpath = process.env.UNI_CLI_CONTEXT + "/dist/dev/app-plus/*"
-                var destpath = process.env.UNI_CLI_CONTEXT + '/dist/dev/app-plus/__UNI__3F88888.wgt'
-  
                 //压缩wgt包
-                _7z.pack(srcpath.replace(/\\/g,"/"), destpath.replace(/\\/g,"/"), err => {
-                  // done
-                  console.log('>>>编译完成>>>wgt包打包完成--' + err);
-                });
+                zipwgt();
               }
               isFirst = false
             } else {
